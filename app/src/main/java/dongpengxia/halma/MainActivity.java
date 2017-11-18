@@ -6,8 +6,10 @@ package dongpengxia.halma;
 //an empty adjacent square or (exclusive or) 'skip' over a sequence of pieces sequentially,
 //skipping over one adjacent piece on each 'skip'.
 
-import android.support.v7.app.AppCompatActivity;
+import android.app.Dialog;
+import android.content.Context;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -25,8 +27,19 @@ public class MainActivity extends AppCompatActivity
     Button boardButtons[][]; //GUI button board version of theBoard
     TextView infoDisplay;    //textual display - currently has no purpose
     Button switchTurns;
-    Button quitGame;
     Button help;
+    Button giveUp;
+    Button quitGame;
+    Button close; //closes dialog
+
+    String rules = "The objective is to move pieces from one\n" +
+            "corner of the board to the opposite corner.\n"
+            + "Players take turns moving one piece at a time.\n"
+            + "A piece can be moved one space in any \n" +
+            "direction or may “hop” over a series of\n" +
+            "adjacent spaces for as many jumps as they\n" +"are able.";
+
+    Context c = this; //context for dialog
 
     //onCreate == main method for Android
     @Override
@@ -69,13 +82,16 @@ public class MainActivity extends AppCompatActivity
 
                 //set red, black, and blank spaces
                 if (theBoard.getTheSpaces()[row][col].getColor() == 'r') {
-                    boardButtons[row][col].setText("R");
+                    //boardButtons[row][col].setText("R");
+                    boardButtons[row][col].setBackgroundResource(R.drawable.red);
                     boardButtons[row][col].setTag("Red");
                 } else if (theBoard.getTheSpaces()[row][col].getColor() == 'b') {
-                    boardButtons[row][col].setText("B");
+                    //boardButtons[row][col].setText("B");
+                    boardButtons[row][col].setBackgroundResource(R.drawable.black);
                     boardButtons[row][col].setTag("Black");
                 } else if (theBoard.getTheSpaces()[row][col].getColor() == ' ') {
-                    boardButtons[row][col].setText(" ");
+                    //boardButtons[row][col].setText(" ");
+                    boardButtons[row][col].setBackgroundResource(R.drawable.empty);
                     boardButtons[row][col].setTag("Blank");
                 }
 
@@ -109,8 +125,8 @@ public class MainActivity extends AppCompatActivity
                 //at this point, startSpace is the starting space of the turn, currentSpace is the ending space of the turn
 
                 //Diagnostic Output
-                System.out.println("Start Row: " + startSpace.getRow() + " Start Column: " + startSpace.getColumn());
-                System.out.println("Dest Row: " + currentSpace.getRow() + " Dest Column: " + currentSpace.getColumn());
+                //System.out.println("Start Row: " + startSpace.getRow() + " Start Column: " + startSpace.getColumn());
+                //System.out.println("Dest Row: " + currentSpace.getRow() + " Dest Column: " + currentSpace.getColumn());
 
                 startSpace = null;
                 currentSpace = null;
@@ -119,6 +135,47 @@ public class MainActivity extends AppCompatActivity
                 //start listener to other game instance--------------------------------------------------------------------------------------------------------
             }
         });
+
+        //creates dialog to display the rules of the game
+        help = (Button) findViewById(R.id.help);
+        help.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                final Dialog d = new Dialog(c);
+                d.setContentView(R.layout.customdialog);
+                d.setTitle("Rules");
+
+                TextView t = (TextView) d.findViewById(R.id.text);
+                t.setText(rules);
+
+                close = (Button) d.findViewById(R.id.closeDialog);
+                close.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        d.dismiss();
+                    }
+                });
+                d.show();
+            }
+        });
+
+        giveUp = (Button) findViewById(R.id.giveUp);
+        //---------------------------------------------------------------------------------------------------------------------------
+        //current player gives up the game
+
+        quitGame = (Button) findViewById(R.id.quitGame);
+        quitGame.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                finish();
+                System.exit(0);
+            }
+        });
+
     }//end onCreate
 
     //update the local board to switch turns after the opponent's board has already switched turns and sent the switch turns communication
@@ -145,19 +202,22 @@ public class MainActivity extends AppCompatActivity
         //red
         if (color == 'r')
         {
-            boardButtons[row][col].setText("R");
+            //boardButtons[row][col].setText("R");
+            boardButtons[row][col].setBackgroundResource(R.drawable.red);
             boardButtons[row][col].setTag("Red");
         }
         //black
         else if (color == 'b')
         {
-            boardButtons[row][col].setText("B");
+            //boardButtons[row][col].setText("B");
+            boardButtons[row][col].setBackgroundResource(R.drawable.black);
             boardButtons[row][col].setTag("Black");
         }
         //blank
         else if (color == ' ')
         {
-            boardButtons[row][col].setText(" ");
+            //boardButtons[row][col].setText(" ");
+            boardButtons[row][col].setBackgroundResource(R.drawable.empty);
             boardButtons[row][col].setTag("Blank");
         }
 

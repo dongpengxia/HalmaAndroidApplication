@@ -9,8 +9,7 @@
 
     <TableLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="1">
+        android:layout_height="wrap_content">
 
         <TableRow
             android:layout_width="match_parent"
@@ -259,29 +258,48 @@
 
         </TableRow>
 
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <TextView
-                android:id="@+id/infoDisplay"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="TextView" />
-        </TableRow>
-
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1">
-
-            <Button
-                android:id="@+id/switchTurn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Finish Turn" />
-        </TableRow>
-
     </TableLayout>
+
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="123dp">
+
+        <TextView
+            android:id="@+id/infoDisplay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TextView" />
+    </TableRow>
+
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="114dp"
+        android:layout_weight="1">
+
+        <Button
+            android:id="@+id/switchTurn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Finish Turn" />
+
+        <Button
+            android:id="@+id/help"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Help" />
+
+        <Button
+            android:id="@+id/giveUp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Give Up" />
+
+        <Button
+            android:id="@+id/quitGame"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Quit Game" />
+
+    </TableRow>
 
 </LinearLayout>
