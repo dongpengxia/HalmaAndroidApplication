@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity
     Button boardButtons[][]; //GUI button board version of theBoard
     TextView infoDisplay;    //textual display - currently has no purpose
     Button switchTurns;
+    Button quitGame;
 
     //onCreate == main method for Android
     @Override
