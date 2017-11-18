@@ -26,6 +26,7 @@ public class MainActivity extends AppCompatActivity
     TextView infoDisplay;    //textual display - currently has no purpose
     Button switchTurns;
     Button quitGame;
+    Button help;
 
     //onCreate == main method for Android
     @Override
