@@ -187,6 +187,6 @@ public class Board
     public Space[][] getTheSpaces() { return theSpaces; }
     public char currentTurn() { return currentTurn; }
     private void setTheSpaces( Space[][] sp ) { theSpaces = sp; }
-    private void setCurrentTurn( char c ) { currentTurn = c; }
+    public void setCurrentTurn( char c ) { currentTurn = c; }
 
 }//end Board
