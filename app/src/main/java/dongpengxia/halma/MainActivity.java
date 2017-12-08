@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
@@ -23,11 +24,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.*;
+import java.util.StringTokenizer;
 
 //main
 public class MainActivity extends AppCompatActivity
 {
+    boolean jumped;             //jumped is true when a piece has already been hopped this turn, false otherwise
     boolean keepGoing = true;   //keepGoing is used in the while loop in the reader thread
     Player[] players;           //two players, 'r' is player[0] (red), 'b' is player[1] (black)
     char myColor = ' ';         //stores the color of this player
@@ -45,12 +47,13 @@ public class MainActivity extends AppCompatActivity
     Button quitGame;            //button to close application
     Button close;               //closes dialog
     Context c = this;           //context for dialog
-    final String rules = "The objective is to move pieces from one\n" +
-                         "corner of the board to the opposite corner.\n" +
-                        "Players take turns moving one piece at a time.\n" +
-                        "A piece can be moved one space in any \n" +
-                        "direction or may “hop” over a series of\n" +
-                        "adjacent pieces for as many jumps as possible.";
+    final String rules = "The objective is to move pieces from one " +
+                        "corner of the board to the opposite corner. " +
+                        "Players take turns moving one piece at a time. " +
+                        "A piece can be moved one space in any " +
+                        "direction or may “hop” over a series of " +
+                        "adjacent pieces for as many jumps as possible." +
+                        "If you hop pieces, end your turn with the Finish Turn button.";
 
     //Server communications
     public static String machineName = "10.0.2.2";  //default ip for localhost of computer (not virtual device)
@@ -70,6 +73,9 @@ public class MainActivity extends AppCompatActivity
 
         //at start of game, first piece selection has not been made yet
         firstStep = false;
+
+        //no pieces have been hopped yet
+        jumped = false;
 
         //temporary names for players
         String name1 = "Player 1";
@@ -118,7 +124,7 @@ public class MainActivity extends AppCompatActivity
             }//end for loop
         }//end for loop
 
-        //Text on Screen
+        //Text on Screen (whose turn it is)
         infoDisplay = (TextView) findViewById(R.id.infoDisplay);
         updateInfoDisplay();
 
@@ -131,6 +137,12 @@ public class MainActivity extends AppCompatActivity
             {
                 if(theBoard.currentTurn() == myColor)
                 {
+                    //de-select last touched piece
+                    if(currentSpace != null)
+                    {
+                        updateButton(currentSpace);
+                    }
+
                     //switch turns on local board
                     safeSwitchTurns();
                     //send communication to opponent that turn is finished
@@ -153,7 +165,8 @@ public class MainActivity extends AppCompatActivity
                 TextView t = (TextView) d.findViewById(R.id.text);
                 t.setText(rules);
                 close = (Button) d.findViewById(R.id.closeDialog);
-                close.setOnClickListener(new View.OnClickListener() {
+                close.setOnClickListener(new View.OnClickListener()
+                {
                     @Override
                     public void onClick(View v) {
                         d.dismiss();
@@ -165,9 +178,16 @@ public class MainActivity extends AppCompatActivity
 
         //give up button allows the player to forfeit the game
         giveUp = (Button) findViewById(R.id.giveUp);
-        //need to complete
-        //------------------------------------------------------------------------------------------------------------------------------------
-        //------------------------------------------------------------------------------------------------------------------------------------
+        giveUp.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                resetGame();
+                Thread giveUp = new Thread(new Write("forfeit"));
+                giveUp.start();
+            }//end onClick(View)
+        });
 
         //quit buttons lets player close the application
         quitGame = (Button) findViewById(R.id.quitGame);
@@ -176,8 +196,33 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v)
             {
+                Thread quit = new Thread(new Write("quit"));
+                quit.start();
                 finish();
                 System.exit(0);
+            }//end onClick(View)
+        });
+
+        //add click listener to background so user can deselect a piece
+        LinearLayout rlayout = (LinearLayout) findViewById(R.id.mainlayout);
+        rlayout.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                //make sure a hop/move has not been made already
+                if(!jumped)
+                {
+                    System.out.println("Deselected piece");
+                    if(currentSpace != null)
+                    {
+                        //de-select piece on GUI
+                        updateButton(currentSpace);
+                    }
+                    //de-select piece in game
+                    currentSpace = null;
+                }
+
             }//end onClick(View)
         });
 
@@ -203,6 +248,10 @@ public class MainActivity extends AppCompatActivity
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+
+                //new turn, no pieces have been hopped over yet
+                jumped = false;
+
                 //switch to next player
                 theBoard.switchTurns();
 
@@ -223,27 +272,29 @@ public class MainActivity extends AppCompatActivity
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                int row = sp.getRow();
-                int col = sp.getColumn();
-                char color = theBoard.getTheSpaces()[row][col].getColor();
 
-                //red
-                if (color == 'r')
+                //avoid null-pointer exceptions
+                if(sp != null)
                 {
-                    boardButtons[row][col].setBackgroundResource(R.drawable.red);
-                    boardButtons[row][col].setTag("Red");
-                }
-                //black
-                else if (color == 'b')
-                {
-                    boardButtons[row][col].setBackgroundResource(R.drawable.black);
-                    boardButtons[row][col].setTag("Black");
-                }
-                //blank
-                else if (color == ' ')
-                {
-                    boardButtons[row][col].setBackgroundResource(R.drawable.empty);
-                    boardButtons[row][col].setTag("Blank");
+                    int row = sp.getRow();
+                    int col = sp.getColumn();
+                    char color = theBoard.getTheSpaces()[row][col].getColor();
+
+                    //red
+                    if (color == 'r') {
+                        boardButtons[row][col].setBackgroundResource(R.drawable.red);
+                        boardButtons[row][col].setTag("Red");
+                    }
+                    //black
+                    else if (color == 'b') {
+                        boardButtons[row][col].setBackgroundResource(R.drawable.black);
+                        boardButtons[row][col].setTag("Black");
+                    }
+                    //blank
+                    else if (color == ' ') {
+                        boardButtons[row][col].setBackgroundResource(R.drawable.empty);
+                        boardButtons[row][col].setTag("Blank");
+                    }
                 }
             }//end run()
         });
@@ -285,22 +336,6 @@ public class MainActivity extends AppCompatActivity
             //find space that was clicked
             Space sp = theBoard.getTheSpaces()[row][column];
 
-            //--------------------------------------------------------------------------------------------------------------------------------
-            //need to complete:
-            //add a part so that if the user clicks outside the board, currentSpace is set to null if firstStep is true
-            /*
-            //check if space exists
-            if(sp == null) //replace this with detection that the user clicked outside the board
-            {
-                //reset piece to be moved if click was outside board
-                if(firstStep)
-                {
-                    currentSpace = null;
-                }
-            }
-            */
-            //--------------------------------------------------------------------------------------------------------------------------------
-
             if (theBoard.currentTurn() == myColor)
             {
                 //attempting to move a piece to an empty square
@@ -339,6 +374,9 @@ public class MainActivity extends AppCompatActivity
                             //update GUI
                             updateButton(currentSpace);
                             updateButton(sp);
+                            setSelected(sp);
+
+                            jumped = true;
 
                             //communication of move to other client/server
                             Thread mv = new Thread( new Write(""+currentSpace.row + " " + currentSpace.column + " " + sp.row + " " + sp.column));
@@ -349,7 +387,6 @@ public class MainActivity extends AppCompatActivity
                             catch(Exception e)
                             {}
 
-
                             //reset values
                             currentSpace = sp;
                             firstStep = false;
@@ -359,6 +396,7 @@ public class MainActivity extends AppCompatActivity
                 else if (sp.getColor() == theBoard.currentTurn() && (currentSpace == null || (currentSpace != null && currentSpace.getColor() != theBoard.currentTurn()))) //last check is to make sure its the selection step
                 {
                     //selected a piece to be moved in the next click
+                    setSelected(sp);
                     startSpace = sp;
                     currentSpace = sp;
                     firstStep = true;
@@ -433,6 +471,18 @@ public class MainActivity extends AppCompatActivity
                             System.out.println("Switching turns based on switch message from server.");
                             safeSwitchTurns();
                         }
+                        //other user disconnected message
+                        else if(readMe.equals("quit"))
+                        {
+                            System.out.println("Other player quit");
+                            quitDialog();
+                        }
+                        //other user gave up message
+                        else if(readMe.equals("forfeit"))
+                        {
+                            System.out.println("Other player forfeited");
+                            forfeitDialog();
+                        }
                         else
                         {
                             //handle a move
@@ -477,15 +527,6 @@ public class MainActivity extends AppCompatActivity
                                 //check for winner
                                 checkWinner();
                             }
-
-                            //need to complete
-                            //if the user requested quit, run quitting procedures
-                            //if(writeme.equals("CLIENT: /quit") || writeme.equals("SERVER: /quit"))
-                            //{
-                                //keepGoing = false;
-                            //}
-                            //----------------------------------------------------------------------------------------------------------------
-                            //----------------------------------------------------------------------------------------------------------------
                         }//end else
                     }//end else
                 }//end while
@@ -497,6 +538,23 @@ public class MainActivity extends AppCompatActivity
         }//end run()
     }//end Read
 
+    //highlights the piece that is selected
+    public void setSelected(Space sp)
+    {
+        int row = sp.getRow();
+        int col = sp.getColumn();
+
+        if(sp.getColor() == 'r')
+        {
+            //set to red piece selected
+            boardButtons[row][col].setBackgroundResource(R.drawable.redselect);
+        }
+        else if(sp.getColor() == 'b')
+        {
+            //set to black piece selected
+            boardButtons[row][col].setBackgroundResource(R.drawable.blackselect);
+        }
+    } //end setSelected
 
     //checkWinner checks if there is a winner after a turn ends
     public void checkWinner()
@@ -508,52 +566,128 @@ public class MainActivity extends AppCompatActivity
             //pop-up message when a player wins or loses
             winDialog(winner);
             //reset the game
-            theBoard = new Board();
-            updateButtonBoard(); //update GUI
-            currentSpace = null;
-            startSpace = null;
-            firstStep = false;
+            resetGame();
         }
-
     }//end checkWinner
 
     //winDialog opens a dialog box telling the user if they won or lost when the game ends
-    public void winDialog(char winner)
+    public void winDialog(final char winner)
     {
-        String winnerMsg = "";
-        if(winner != ' ')
-        {
-            if (winner == myColor)
-            {
-                winnerMsg = "You Won!";
-            }
-            else
-            {
-                winnerMsg = "You Lost";
-            }
-
-            final Dialog winDialog = new Dialog(c);
-            winDialog.setContentView(R.layout.winnerdialog);
-            winDialog.setTitle("Winner");
-
-            TextView text = (TextView) winDialog.findViewById(R.id.winner);
-            text.setText(winnerMsg);
-
-            Button ng = (Button) winDialog.findViewById(R.id.ngDialog);
-            ng.setOnClickListener(new View.OnClickListener()
-            {
-                @Override
-                public void onClick(View v)
+        //switch to UI thread if function call initiated by communication from server
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                String winnerMsg = "";
+                if(winner != ' ')
                 {
-                    winDialog.dismiss();
+                    if (winner == myColor)
+                    {
+                        winnerMsg = "You Won!";
+                    }
+                    else
+                    {
+                        winnerMsg = "You Lost";
+                    }
+
+                    final Dialog winDialog = new Dialog(c);
+                    winDialog.setContentView(R.layout.winnerdialog);
+                    winDialog.setTitle("Winner");
+
+                    TextView text = (TextView) winDialog.findViewById(R.id.winner);
+                    text.setText(winnerMsg);
+
+                    Button ng = (Button) winDialog.findViewById(R.id.ngDialog);
+                    ng.setOnClickListener(new View.OnClickListener()
+                    {
+                        @Override
+                        public void onClick(View v)
+                        {
+                            winDialog.dismiss();
+                        }
+                    });
+                    winDialog.show();
                 }
-            });
-            winDialog.show();
-        }
+            }
+        });
     }//end winDialog(char)
 
+    //other player disconnected, send player a message about situation
+    public void quitDialog()
+    {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                //open dialog box
+                String q = "The other player has disconnected, please restart the app";
+                final Dialog quitDialog = new Dialog(c);
+                quitDialog.setContentView(R.layout.quitdialog);
+                quitDialog.setTitle("Opponent Has Quit");
+
+                TextView text = (TextView) quitDialog.findViewById(R.id.quit);
+                text.setText(q);
+
+                Button ng = (Button) quitDialog.findViewById(R.id.okbutton);
+                ng.setOnClickListener(new View.OnClickListener()
+                {
+                    @Override
+                    public void onClick(View v)
+                    {
+                        finish();
+                        System.exit(0);
+                    }
+                });
+                quitDialog.show();
+            }
+        });
+    } //end quitDialog()
+
+    //other player gave up, send player a message about win or loss
+    public void forfeitDialog()
+    {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                //open dialog box
+                String f = "YOU WIN! The other player has given up, please start a new game";
+                final Dialog forfeitDialog = new Dialog(c);
+                forfeitDialog.setContentView(R.layout.forfeitdialog);
+                forfeitDialog.setTitle("YOU WIN");
+
+                TextView text = (TextView) forfeitDialog.findViewById(R.id.forfeit);
+                text.setText(f);
+
+                Button ng = (Button) forfeitDialog.findViewById(R.id.restart);
+                ng.setOnClickListener(new View.OnClickListener()
+                {
+                    @Override
+                    public void onClick(View v)
+                    {
+                        resetGame();
+                        forfeitDialog.dismiss();
+                    }
+                });
+                forfeitDialog.show();
+            }
+        });
+    } //end forfeitDialog()
+
+    //reset the game (board and GUI)
+    public void resetGame()
+    {
+        //reset the game
+        theBoard = new Board();
+        updateButtonBoard(); //update GUI
+        currentSpace = null;
+        startSpace = null;
+        firstStep = false;
+        //update current turn display
+        updateInfoDisplay();
+
+    } //end resetGame
+
     //setTurn sets the starting color and turn of user
-    //only to be used in the beginning when you are expecting a message from the server ("black" (1st connection), "red" (2nd connection))
+    //only to be used in the beginning when you are expecting a message from the server
+    //("black" (1st connection), "red" (2nd connection))
     public void setTurn()
     {
         String readMe = "";
@@ -585,17 +719,32 @@ public class MainActivity extends AppCompatActivity
 
     }//end setTurn()
 
-    //update infoDisplay
+    //update infoDisplay to show current color and whether it's a player's turn or not
     public void updateInfoDisplay()
     {
-        if (theBoard.currentTurn() == 'r')
+        runOnUiThread(new Runnable()
         {
-            infoDisplay.setText("Red's Turn");
-        }
-        else if(theBoard.currentTurn() == 'b')
-        {
-            infoDisplay.setText("Black's Turn");
-        }
+            @Override
+            public void run()
+            {
+                if (theBoard.currentTurn() == 'r' && theBoard.currentTurn() == myColor)
+                {
+                    infoDisplay.setText("Your (Red's) Turn");
+                }
+                else if (theBoard.currentTurn() == 'r' && theBoard.currentTurn() != myColor)
+                {
+                    infoDisplay.setText("Opponent's (Red's) Turn");
+                }
+                else if(theBoard.currentTurn() == 'b' && theBoard.currentTurn() == myColor)
+                {
+                    infoDisplay.setText("Your (Black's) Turn");
+                }
+                else if(theBoard.currentTurn() == 'b' && theBoard.currentTurn() != myColor)
+                {
+                    infoDisplay.setText("Opponent's (Black's) Turn");
+                }
+            }
+        });
     }//end updateInfoDisplay
 
     //thread for sending messages to server

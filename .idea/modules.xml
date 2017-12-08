@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Halma.iml" filepath="$PROJECT_DIR$/Halma.iml" />
+      <module fileurl="file://$PROJECT_DIR$/HalmaAndroidApplication.iml" filepath="$PROJECT_DIR$/HalmaAndroidApplication.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

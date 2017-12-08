@@ -3,17 +3,19 @@
     android:layout_width="match_parent" android:layout_height="match_parent">
 
     <TextView
-        android:id="@+id/text"
-        android:textSize="20dp"
+        android:id="@+id/forfeit"
+        android:gravity="center"
+        android:textSize="40dp"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         />
     <Button
-        android:layout_width="75dp"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
-        android:id="@+id/closeDialog"
-        android:text="Close"
+        android:id="@+id/restart"
+        android:text="New Game"
         android:layout_marginTop="5dp"
         android:layout_marginRight="5dp"
-        android:layout_below="@+id/text"/>
+        android:layout_below="@+id/forfeit"/>
+
 </RelativeLayout>

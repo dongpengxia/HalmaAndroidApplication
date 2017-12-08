@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:id="@+id/mainlayout"
     tools:context="dongpengxia.halma.MainActivity">
 
     <TableLayout
@@ -262,10 +263,23 @@
 
     <TableRow
         android:layout_width="match_parent"
-        android:layout_height="123dp">
+        android:layout_height="64dp" >
+
+        <Button
+            android:id="@+id/switchTurn"
+            android:width="400dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Finish Turn" />
+    </TableRow>
+
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="90dp">
 
         <TextView
             android:id="@+id/infoDisplay"
+            android:textSize="40dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="TextView" />
@@ -275,12 +289,6 @@
         android:layout_width="match_parent"
         android:layout_height="114dp"
         android:layout_weight="1">
-
-        <Button
-            android:id="@+id/switchTurn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Finish Turn" />
 
         <Button
             android:id="@+id/help"
