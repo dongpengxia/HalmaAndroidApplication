@@ -198,6 +198,21 @@ public class MainActivity extends AppCompatActivity
             {
                 Thread quit = new Thread(new Write("quit"));
                 quit.start();
+
+                //socket will be closed
+                keepGoing = false;
+
+                //close socket
+                try
+                {
+                    Thread.sleep(1000);
+                    sock.close();
+                }
+                catch(Exception e)
+                {
+                    System.out.println("Caught exception: " + e);
+                }
+
                 finish();
                 System.exit(0);
             }//end onClick(View)
@@ -475,6 +490,8 @@ public class MainActivity extends AppCompatActivity
                         else if(readMe.equals("quit"))
                         {
                             System.out.println("Other player quit");
+                            keepGoing = false;
+
                             quitDialog();
                         }
                         //other user gave up message
@@ -632,6 +649,21 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onClick(View v)
                     {
+
+                        keepGoing = false;
+
+                        //close socket
+                        try
+                        {
+                            Thread.sleep(1000);
+                            sock.close();
+                        }
+                        catch(Exception e)
+                        {
+                            System.out.println("Caught exception: " + e);
+                        }
+
+                        //exit application
                         finish();
                         System.exit(0);
                     }
